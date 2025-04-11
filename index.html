@@ -104,7 +104,12 @@
           return;
         }
 
-        const latest = insertData[0];
+        if (!insertData || insertData.length === 0) {
+  alert('Data was inserted, but Supabase returned no data. Please check the table.');
+  return;
+}
+const latest = insertData[0];
+
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
         submitBtn.disabled = true;
