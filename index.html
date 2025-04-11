@@ -114,7 +114,6 @@
             .from('birth_cert_requests')
             .select('*')
             .eq('number', number)
-            .order('timestamp', { ascending: false })
             .limit(1);
 
           if (fetchError || !fetchData || fetchData.length === 0) {
