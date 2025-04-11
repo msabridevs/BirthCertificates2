@@ -89,6 +89,11 @@
       async function submitData() {
         const name = document.getElementById('name').value.trim();
         const notes = document.getElementById('notes').value.trim();
+        if (!name) {
+          alert("Please enter the applicant's name.");
+          return;
+        }
+
         const number = await generateUniqueNumber();
 
         const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
@@ -140,14 +145,26 @@
         document.getElementById('submit-btn').disabled = true;
         document.getElementById('new-entry-btn').style.display = 'inline-block';
 
-        document.getElementById('result').innerHTML = `
-          <strong>Name:</strong> ${name}<br/>
-          <strong>Number:</strong> <span style="background: yellow; padding: 2px 4px;">${latest.number}</span><br/>
-          <strong>Status:</strong> ${latest.status}<br/>
-          <strong>Notes:</strong> ${latest.notes || "None"}<br/>
-          <strong>Timestamp:</strong> ${latest.timestamp}<br/>
-          <strong>ID:</strong> ${latest.id || "N/A"}<br/>
-        `;
+        const content = `
+Name: ${name}
+Number: ${latest.number}
+Status: ${latest.status}
+Notes: ${latest.notes || "None"}
+Timestamp: ${latest.timestamp}
+ID: ${latest.id || "N/A"}
+`;
+
+        document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
+
+        // Create downloadable file
+        const blob = new Blob([content], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, "_"); // sanitize filename
+        link.download = `${safeName}_birth_certificate.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
 
       async function updateExistingStatus() {
