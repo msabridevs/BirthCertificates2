@@ -1,148 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Birth Certificate Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label, input, button, textarea { display: block; margin-bottom: 10px; width: 100%; max-width: 400px; }
-    .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
-    #app-section { display: none; }
-  </style>
-</head>
-<body>
-  <h2>Birth Certificate Application Tracker</h2>
+<script>
+  window.onload = () => {
+    const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // replace this
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';         // replace this
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <!-- Auth Section -->
-  <div id="auth-section">
-    <label>Email:</label>
-    <input type="email" id="email" />
-    <label>Password:</label>
-    <input type="password" id="password" />
-    <button onclick="login()">Login</button>
-  </div>
+    function showApp() {
+      document.getElementById('auth-section').style.display = 'none';
+      document.getElementById('app-section').style.display = 'block';
+    }
 
-  <!-- Main App Section -->
-  <div id="app-section">
-    <button onclick="logout()">Logout</button>
+    function showAuth() {
+      document.getElementById('auth-section').style.display = 'block';
+      document.getElementById('app-section').style.display = 'none';
+    }
 
-    <label for="name">Applicant Name:</label>
-    <input type="text" id="name" />
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) showApp();
+      else showAuth();
+    });
 
-    <label for="notes">Notes (Optional):</label>
-    <textarea id="notes"></textarea>
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log('Login response:', { data, error });
+      if (error) return alert('Login error: ' + error.message);
+      alert('Login successful');
+      showApp();
+    }
 
-    <button id="submit-btn" onclick="submitData()">Generate and Submit Number</button>
-    <button id="new-entry-btn" onclick="resetForm()" style="display:none;">New Entry</button>
+    async function logout() {
+      await supabase.auth.signOut();
+      showAuth();
+    }
 
-    <div class="result" id="result"></div>
-  </div>
+    async function generateUniqueNumber() {
+      const { data, error } = await supabase.from('birth_cert_requests').select('number');
+      if (error) throw error;
+      const existing = new Set(data.map(row => row.number));
+      let number;
+      do {
+        number = String(Math.floor(10000 + Math.random() * 90000));
+      } while (existing.has(number));
+      return number;
+    }
 
-  <script>
-    window.onload = () => {
-      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function submitData() {
+      const name = document.getElementById('name').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+      const number = await generateUniqueNumber();
 
-      function showApp() {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('app-section').style.display = 'block';
-      }
-
-      function showAuth() {
-        document.getElementById('auth-section').style.display = 'block';
-        document.getElementById('app-section').style.display = 'none';
-      }
-
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) showApp();
-        else showAuth();
-      });
-
-      async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        console.log('Login response:', { data, error });
-        if (error) return alert('Login error: ' + error.message);
-        alert('Login successful');
-        showApp();
-      }
-
-      async function logout() {
-        await supabase.auth.signOut();
-        showAuth();
-      }
-
-      async function generateUniqueNumber() {
-        const { data, error } = await supabase.from('birth_cert_requests').select('number');
-        if (error) throw error;
-        const existing = new Set(data.map(row => row.number));
-        let number;
-        do {
-          number = String(Math.floor(10000 + Math.random() * 90000));
-        } while (existing.has(number));
-        return number;
-      }
-
-      async function submitData() {
-        const name = document.getElementById('name').value.trim();
-        const notes = document.getElementById('notes').value.trim();
-        const number = await generateUniqueNumber();
-
-        const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
-        let status = "in progress";
-
-        if (data && data.length > 0) {
-          const choices = ["approved", "rejected", "missing docs"];
-          status = prompt("This number exists. Enter new status:", choices[0]);
-          if (!choices.includes(status)) {
-            alert("Invalid status");
-            return;
-          }
-        }
-
-        const { data: insertData, error: insertError } = await supabase.from('birth_cert_requests').upsert({
-          number,
-          status,
-          notes: notes || null
-        }, { onConflict: ['number'] });
-
-        if (insertError) {
-          alert('Error submitting data: ' + insertError.message);
+      const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
+      let status = \"in progress\";
+      if (data && data.length > 0) {
+        const choices = [\"approved\", \"rejected\", \"missing docs\"];
+        status = prompt(\"This number exists. Enter new status:\", choices[0]);
+        if (!choices.includes(status)) {
+          alert(\"Invalid status\");
           return;
         }
-
-        const latest = insertData[0];
-        document.getElementById('name').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('new-entry-btn').style.display = 'inline-block';
-        document.getElementById('result').innerHTML = `
-          <strong>Name:</strong> ${name}<br/>
-          <strong>Number:</strong> <span style="background: yellow; padding: 2px 4px;">${latest.number}</span><br/>
-          <strong>Status:</strong> ${latest.status}<br/>
-          <strong>Notes:</strong> ${latest.notes || "None"}<br/>
-          <strong>Timestamp:</strong> ${latest.timestamp}<br/>
-          <strong>ID:</strong> ${latest.id || "N/A"}<br/>
-        `;
       }
 
-      function resetForm() {
-        document.getElementById('name').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('new-entry-btn').style.display = 'none';
-        document.getElementById('result').innerHTML = '';
+      const { data: insertData, error: insertError } = await supabase.from('birth_cert_requests').upsert({
+        number,
+        status,
+        notes: notes || null
+      }, { onConflict: ['number'] });
+
+      if (insertError) {
+        alert('Error submitting data: ' + insertError.message);
+        return;
       }
 
-      window.login = login;
-      window.logout = logout;
-      window.submitData = submitData;
-      window.resetForm = resetForm;
-    };
-  </script>
-</body>
-</html>
+      const latest = insertData[0];
+
+      // Hide form fields, disable submit, show new entry button
+      document.getElementById('name').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('submit-btn').disabled = true;
+      document.getElementById('new-entry-btn').style.display = 'inline-block';
+
+      document.getElementById('result').innerHTML = `
+        <strong>Name:</strong> ${name}<br/>
+        <strong>Number:</strong> <span style=\"background: yellow; padding: 2px 4px;\">${latest.number}</span><br/>
+        <strong>Status:</strong> ${latest.status}<br/>
+        <strong>Notes:</strong> ${latest.notes || \"None\"}<br/>
+        <strong>Timestamp:</strong> ${latest.timestamp}<br/>
+        <strong>ID:</strong> ${latest.id || \"N/A\"}<br/>
+      `;
+    }
+
+    function resetForm() {
+      document.getElementById('name').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('new-entry-btn').style.display = 'none';
+    }
+
+    // Attach global functions
+    window.login = login;
+    window.logout = logout;
+    window.submitData = submitData;
+    window.resetForm = resetForm;
+  };
+</script>
