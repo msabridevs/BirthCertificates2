@@ -1,56 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Birth Certificate Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label, input, button, textarea { display: block; margin-bottom: 10px; }
-    .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
-    #app-section { display: none; }
-  </style>
-</head>
-<body>
-  <h2>Birth Certificate Application Tracker</h2>
-
-  <!-- Auth Section -->
-  <div id="auth-section">
-    <label>Email:</label>
-    <input type="email" id="email" />
-    <label>Password:</label>
-    <input type="password" id="password" />
-    <button onclick="login()">Login</button>
-    <button onclick="signup()">Sign Up</button>
-  </div>
-
-  <!-- Main App Section -->
-  <div id="app-section">
-    <button onclick="logout()">Logout</button>
-
-    <label for="name">Applicant Name:</label>
-    <input type="text" id="name" />
-
-    <label for="notes">Notes (Optional):</label>
-    <textarea id="notes"></textarea>
-
-    <button onclick="submitData()">Generate and Submit Number</button>
-
-    <div class="result" id="result"></div>
-  </div>
-
-  <script>
+<script>
+  window.onload = () => {
     const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
     const SUPABASE_ANON_KEY = 'YOUR_PUBLIC_ANON_KEY';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        showApp();
-      } else {
-        showAuth();
-      }
+      if (session) showApp();
+      else showAuth();
     });
 
     function showApp() {
@@ -91,12 +47,10 @@
       const { data, error } = await supabase.from('birth_cert_requests').select('number');
       if (error) throw error;
       const existing = new Set(data.map(row => row.number));
-
       let number;
       do {
         number = String(Math.floor(10000 + Math.random() * 90000));
       } while (existing.has(number));
-
       return number;
     }
 
@@ -107,12 +61,12 @@
       const number = await generateUniqueNumber();
       const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
 
-      let status = "in progress";
+      let status = \"in progress\";
       if (data && data.length > 0) {
-        const choices = ["approved", "rejected", "missing docs"];
-        status = prompt("This number exists. Enter new status (approved, rejected, missing docs):", choices[0]);
+        const choices = [\"approved\", \"rejected\", \"missing docs\"];
+        status = prompt(\"This number exists. Enter new status (approved, rejected, missing docs):\", choices[0]);
         if (!choices.includes(status)) {
-          alert("Invalid status");
+          alert(\"Invalid status\");
           return;
         }
       }
@@ -134,11 +88,16 @@
         <strong>Name:</strong> ${name}<br/>
         <strong>Number:</strong> ${latest.number}<br/>
         <strong>Status:</strong> ${latest.status}<br/>
-        <strong>Notes:</strong> ${latest.notes || "None"}<br/>
+        <strong>Notes:</strong> ${latest.notes || \"None\"}<br/>
         <strong>Timestamp:</strong> ${latest.timestamp}<br/>
-        <strong>ID:</strong> ${latest.id || "N/A"}<br/>
+        <strong>ID:</strong> ${latest.id || \"N/A\"}<br/>
       `;
     }
-  </script>
-</body>
-</html>
+
+    // Attach handlers globally for button clicks
+    window.login = login;
+    window.signup = signup;
+    window.logout = logout;
+    window.submitData = submitData;
+  };
+</script>
