@@ -42,8 +42,8 @@
 
   <script>
     window.onload = () => {
-      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // Replace with your Supabase URL
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace with your Supabase anon key
+      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // Replace this
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace this
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const loginBtn = document.getElementById('login-btn');
@@ -55,7 +55,6 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        console.log('Login response:', { data, error });
         if (error) return alert('Login error: ' + error.message);
         alert('Login successful');
         showApp();
@@ -101,7 +100,7 @@
             notes: notes || null
           }, {
             onConflict: ['number'],
-            returning: 'representation' // 💡 Ensures the inserted row is returned
+            returning: 'representation'
           });
 
         if (insertError) {
@@ -109,16 +108,32 @@
           return;
         }
 
+        let latest;
         if (!insertData || insertData.length === 0) {
-          alert('Data was inserted, but Supabase returned no data. Please check the table.');
-          return;
+          const { data: fetchData, error: fetchError } = await supabase
+            .from('birth_cert_requests')
+            .select('*')
+            .eq('number', number)
+            .order('timestamp', { ascending: false })
+            .limit(1);
+
+          if (fetchError || !fetchData || fetchData.length === 0) {
+            alert('Row inserted, but could not retrieve it from Supabase.');
+            return;
+          }
+          latest = fetchData[0];
+        } else {
+          latest = insertData[0];
         }
 
-        const latest = insertData[0];
+        showInsertedResult(latest, name);
+      }
+
+      function showInsertedResult(latest, name) {
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
-        submitBtn.disabled = true;
-        newEntryBtn.style.display = 'inline-block';
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('new-entry-btn').style.display = 'inline-block';
 
         document.getElementById('result').innerHTML = `
           <strong>Name:</strong> ${name}<br/>
