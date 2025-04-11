@@ -28,6 +28,7 @@
   <div id="app-section">
     <button id="logout-btn">Logout</button>
 
+    <h3>New Application</h3>
     <label for="name">Applicant Name:</label>
     <input type="text" id="name" />
 
@@ -38,18 +39,27 @@
     <button id="new-entry-btn" style="display:none;">New Entry</button>
 
     <div class="result" id="result"></div>
+
+    <hr/>
+
+    <h3>Update Existing Request</h3>
+    <label for="existing-number">Enter Existing Number:</label>
+    <input type="text" id="existing-number" />
+    <button id="update-btn">Update Status</button>
+    <div class="result" id="update-result"></div>
   </div>
 
   <script>
     window.onload = () => {
-      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // Replace this
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace this
+      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const loginBtn = document.getElementById('login-btn');
       const logoutBtn = document.getElementById('logout-btn');
       const submitBtn = document.getElementById('submit-btn');
       const newEntryBtn = document.getElementById('new-entry-btn');
+      const updateBtn = document.getElementById('update-btn');
 
       async function login() {
         const email = document.getElementById('email').value;
@@ -94,11 +104,7 @@
 
         const { data: insertData, error: insertError } = await supabase
           .from('birth_cert_requests')
-          .upsert({
-            number,
-            status,
-            notes: notes || null
-          }, {
+          .upsert({ number, status, notes: notes || null }, {
             onConflict: ['number'],
             returning: 'representation'
           });
@@ -144,6 +150,36 @@
         `;
       }
 
+      async function updateExistingStatus() {
+        const number = document.getElementById('existing-number').value.trim();
+        if (!number) return alert('Please enter a number.');
+
+        const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
+        if (error || !data || data.length === 0) {
+          document.getElementById('update-result').innerHTML = `<span style="color:red">❌ Number not found</span>`;
+          return;
+        }
+
+        const choices = ["approved", "rejected", "missing docs"];
+        const newStatus = prompt("Enter new status:", choices[0]);
+        if (!choices.includes(newStatus)) {
+          alert("Invalid status");
+          return;
+        }
+
+        const { error: updateError } = await supabase
+          .from('birth_cert_requests')
+          .update({ status: newStatus })
+          .eq('number', number);
+
+        if (updateError) {
+          alert('Error updating status: ' + updateError.message);
+          return;
+        }
+
+        document.getElementById('update-result').innerHTML = `<span style="color:green">✅ Status updated to: ${newStatus}</span>`;
+      }
+
       function resetForm() {
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
@@ -171,6 +207,7 @@
       logoutBtn.onclick = logout;
       submitBtn.onclick = submitData;
       newEntryBtn.onclick = resetForm;
+      updateBtn.onclick = updateExistingStatus;
     };
   </script>
 </body>
