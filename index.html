@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Birth Certificate Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
@@ -21,12 +21,12 @@
     <input type="email" id="email" />
     <label>Password:</label>
     <input type="password" id="password" />
-    <button onclick="login()">Login</button>
+    <button id="login-btn">Login</button>
   </div>
 
   <!-- Main App Section -->
   <div id="app-section">
-    <button onclick="logout()">Logout</button>
+    <button id="logout-btn">Logout</button>
 
     <label for="name">Applicant Name:</label>
     <input type="text" id="name" />
@@ -34,32 +34,22 @@
     <label for="notes">Notes (Optional):</label>
     <textarea id="notes"></textarea>
 
-    <button id="submit-btn" onclick="submitData()">Generate and Submit Number</button>
-    <button id="new-entry-btn" onclick="resetForm()" style="display:none;">New Entry</button>
+    <button id="submit-btn">Generate and Submit Number</button>
+    <button id="new-entry-btn" style="display:none;">New Entry</button>
 
     <div class="result" id="result"></div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // Replace this
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace this
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     window.onload = () => {
-      function showApp() {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('app-section').style.display = 'block';
-      }
+      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co'; // Replace with your Supabase project URL
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace with your Supabase anon key
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      function showAuth() {
-        document.getElementById('auth-section').style.display = 'block';
-        document.getElementById('app-section').style.display = 'none';
-      }
-
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) showApp();
-        else showAuth();
-      });
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      const submitBtn = document.getElementById('submit-btn');
+      const newEntryBtn = document.getElementById('new-entry-btn');
 
       async function login() {
         const email = document.getElementById('email').value;
@@ -94,7 +84,6 @@
 
         const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
         let status = "in progress";
-
         if (data && data.length > 0) {
           const choices = ["approved", "rejected", "missing docs"];
           status = prompt("This number exists. Enter new status:", choices[0]);
@@ -118,8 +107,8 @@
         const latest = insertData[0];
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('new-entry-btn').style.display = 'inline-block';
+        submitBtn.disabled = true;
+        newEntryBtn.style.display = 'inline-block';
 
         document.getElementById('result').innerHTML = `
           <strong>Name:</strong> ${name}<br/>
@@ -135,14 +124,30 @@
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
         document.getElementById('result').innerHTML = '';
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('new-entry-btn').style.display = 'none';
+        submitBtn.disabled = false;
+        newEntryBtn.style.display = 'none';
       }
 
-      window.login = login;
-      window.logout = logout;
-      window.submitData = submitData;
-      window.resetForm = resetForm;
+      function showApp() {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-section').style.display = 'block';
+      }
+
+      function showAuth() {
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-section').style.display = 'none';
+      }
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) showApp();
+        else showAuth();
+      });
+
+      // Attach button events safely
+      loginBtn.onclick = login;
+      logoutBtn.onclick = logout;
+      submitBtn.onclick = submitData;
+      newEntryBtn.onclick = resetForm;
     };
   </script>
 </body>
