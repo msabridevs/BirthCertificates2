@@ -122,13 +122,13 @@
 
   <script>
     const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace with your real key
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('login-btn').onclick = async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return alert(error.message);
       document.getElementById('auth-section').style.display = 'none';
       document.getElementById('app-section').style.display = 'block';
@@ -162,9 +162,10 @@
       if (!name) return alert("يرجى إدخال الاسم.");
 
       const number = await generateUniqueNumber();
-      await supabase.from('birth_cert_requests').insert({ number, status: "قيد الفحص", notes });
-      const { data } = await supabase.from('birth_cert_requests').select('*').eq('number', number).single();
+      const { error: insertError } = await supabase.from('civil_status').insert({ number, status: "قيد الفحص", notes });
+      if (insertError) return alert("خطأ أثناء الإدخال: " + insertError.message);
 
+      const { data } = await supabase.from('civil_status').select('*').eq('number', number).single();
       const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
       const consulateLink = 'https://www.egyptconsulate-frankfurt.de/';
 
@@ -203,13 +204,13 @@
       const status = document.getElementById('status-select').value;
       if (!number) return alert('أدخل رقم الطلب');
 
-      const { data, error: checkError } = await supabase.from('birth_cert_requests').select('id').eq('number', number);
+      const { data, error: checkError } = await supabase.from('civil_status').select('id').eq('number', number);
       if (checkError || !data || data.length === 0) {
         document.getElementById('update-result').innerHTML = '<span style="color:red">❌ لم يتم العثور على رقم الطلب</span>';
         return;
       }
 
-      const { error } = await supabase.from('birth_cert_requests').update({ status }).eq('number', number);
+      const { error } = await supabase.from('civil_status').update({ status }).eq('number', number);
       if (error) return alert('خطأ: ' + error.message);
 
       document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
