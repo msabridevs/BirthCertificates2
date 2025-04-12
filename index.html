@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
-    label, input, button, textarea { display: block; margin-bottom: 10px; width: 100%; max-width: 400px; }
+    label, input, button, textarea, select { display: block; margin-bottom: 10px; width: 100%; max-width: 400px; }
     .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
     #app-section { display: none; }
   </style>
@@ -45,6 +45,14 @@
     <h3>Update Existing Request</h3>
     <label for="existing-number">Enter Existing Number:</label>
     <input type="text" id="existing-number" />
+
+    <label for="status-select">Select New Status:</label>
+    <select id="status-select">
+      <option value="approved">approved</option>
+      <option value="rejected">rejected</option>
+      <option value="missing docs">missing docs</option>
+    </select>
+
     <button id="update-btn">Update Status</button>
     <div class="result" id="update-result"></div>
   </div>
@@ -95,17 +103,7 @@
         }
 
         const number = await generateUniqueNumber();
-
-        const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
-        let status = "in progress";
-        if (data && data.length > 0) {
-          const choices = ["approved", "rejected", "missing docs"];
-          status = prompt("This number exists. Enter new status:", choices[0]);
-          if (!choices.includes(status)) {
-            alert("Invalid status");
-            return;
-          }
-        }
+        const status = "in progress";
 
         const { data: insertData, error: insertError } = await supabase
           .from('birth_cert_requests')
@@ -119,21 +117,11 @@
           return;
         }
 
-        let latest;
-        if (!insertData || insertData.length === 0) {
-          const { data: fetchData, error: fetchError } = await supabase
-            .from('birth_cert_requests')
-            .select('*')
-            .eq('number', number)
-            .limit(1);
+        const latest = insertData && insertData.length > 0 ? insertData[0] : null;
 
-          if (fetchError || !fetchData || fetchData.length === 0) {
-            alert('Row inserted, but could not retrieve it from Supabase.');
-            return;
-          }
-          latest = fetchData[0];
-        } else {
-          latest = insertData[0];
+        if (!latest) {
+          alert("Error retrieving inserted data.");
+          return;
         }
 
         showInsertedResult(latest, name);
@@ -150,17 +138,17 @@ Name: ${name}
 Number: ${latest.number}
 Status: ${latest.status}
 Notes: ${latest.notes || "None"}
-Timestamp: ${latest.timestamp}
+Timestamp: ${latest.created_at}
 ID: ${latest.id || "N/A"}
 `;
 
         document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
 
-        // Create downloadable file
+        // Download file
         const blob = new Blob([content], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, "_"); // sanitize filename
+        const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, "_");
         link.download = `${safeName}_birth_certificate.txt`;
         document.body.appendChild(link);
         link.click();
@@ -169,18 +157,13 @@ ID: ${latest.id || "N/A"}
 
       async function updateExistingStatus() {
         const number = document.getElementById('existing-number').value.trim();
+        const newStatus = document.getElementById('status-select').value;
+
         if (!number) return alert('Please enter a number.');
 
         const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
         if (error || !data || data.length === 0) {
           document.getElementById('update-result').innerHTML = `<span style="color:red">❌ Number not found</span>`;
-          return;
-        }
-
-        const choices = ["approved", "rejected", "missing docs"];
-        const newStatus = prompt("Enter new status:", choices[0]);
-        if (!choices.includes(newStatus)) {
-          alert("Invalid status");
           return;
         }
 
