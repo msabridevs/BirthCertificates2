@@ -175,12 +175,6 @@
       const { data } = await supabase.from('civil_status').select('*').eq('number', number).single();
       const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
 
-      const qr = new QRious({
-        element: document.getElementById('qr-canvas'),
-        value: 'https://www.egyptconsulate-frankfurt.de/',
-        size: 180
-      });
-
       const resultHTML = `
         نوع المعاملة ${transaction}<br>
         اسم مقدم الطلب ${name}<br>
@@ -195,6 +189,14 @@
       `;
 
       document.getElementById('result').innerHTML = resultHTML;
+
+      setTimeout(() => {
+        new QRious({
+          element: document.getElementById('qr-canvas'),
+          value: 'https://www.egyptconsulate-frankfurt.de/',
+          size: 180
+        });
+      }, 0);
 
       const element = document.getElementById("result-section");
       const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
