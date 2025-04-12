@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>متابعة طلب شهادة الميلاد</title>
+  <title>طلبات الأحوال المدنية</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
@@ -52,10 +52,14 @@
       height: 60px;
       resize: vertical;
     }
+
+    .qr-container {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <h2>متابعة طلب شهادة الميلاد</h2>
+  <h2>طلبات الأحوال المدنية</h2>
 
   <!-- Auth Section -->
   <div id="auth-section">
@@ -76,6 +80,18 @@
       <!-- New Application Panel -->
       <div class="panel">
         <h3>طلب جديد</h3>
+        <label for="transaction-type">نوع المعاملة:</label>
+        <select id="transaction-type">
+          <option value="شهادة ميلاد">شهادة ميلاد</option>
+          <option value="بطاقة الرقم القومى">بطاقة الرقم القومى</option>
+          <option value="صحيفة الحالة الجنائية">صحيفة الحالة الجنائية</option>
+          <option value="قيد فردى">قيد فردى</option>
+          <option value="قيد عائلى">قيد عائلى</option>
+          <option value="شهادة طلاق">شهادة طلاق</option>
+          <option value="شهادة زواج">شهادة زواج</option>
+          <option value="شهادة وفاة">شهادة وفاة</option>
+        </select>
+
         <label for="name">اسم مقدم الطلب:</label>
         <input type="text" id="name" dir="rtl" />
 
@@ -147,6 +163,8 @@
       async function submitData() {
         const name = document.getElementById('name').value.trim();
         const notes = document.getElementById('notes').value.trim();
+        const transaction = document.getElementById('transaction-type').value;
+
         if (!name) {
           alert("يرجى إدخال اسم مقدم الطلب.");
           return;
@@ -176,32 +194,43 @@
           return;
         }
 
-        showInsertedResult(insertedData[0], name);
+        showInsertedResult(insertedData[0], name, transaction);
       }
 
-      function showInsertedResult(latest, name) {
+      function showInsertedResult(latest, name, transaction) {
         document.getElementById('name').value = '';
         document.getElementById('notes').value = '';
         document.getElementById('submit-btn').disabled = true;
         document.getElementById('new-entry-btn').style.display = 'inline-block';
 
         const dateOnly = new Date(latest.created_at).toLocaleDateString('ar-EG');
+        const consulateLink = "https://www.egyptconsulate-frankfurt.de/";
+        const trackingMsg = `
+لمتابعة موقف الطلب الخاص بكم يرجى التحقق برقم الطلب المكون من خمسة أعداد باللغة الانجليزية على موقع البعثة
+${consulateLink}
+`;
 
         const content = `
-الاسم: ${name}
+نوع المعاملة: ${transaction}
+اسم مقدم الطلب: ${name}
 رقم الطلب: ${latest.number}
 الحالة: ${latest.status}
 الملاحظات: ${latest.notes || "لا توجد"}
 تاريخ الإدخال: ${dateOnly}
+${trackingMsg}
 `;
 
-        document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
+        document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>") +
+          `<div class="qr-container">
+            <strong>رمز الاستجابة السريعة لموقع البعثة:</strong><br/>
+            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(consulateLink)}" alt="QR Code"><br/>
+          </div>`;
 
         const blob = new Blob([content], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
-        link.download = `${safeName}_طلب_شهادة_ميلاد.txt`;
+        link.download = `${safeName}_${transaction}_طلب.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
