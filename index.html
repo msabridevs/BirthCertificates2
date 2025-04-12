@@ -12,24 +12,46 @@
       direction: rtl;
       text-align: right;
     }
+
     label, input, textarea, button, select {
       display: block;
       margin-bottom: 10px;
       width: 100%;
-      max-width: 500px;
+      max-width: 100%;
       font-size: 20px;
     }
+
     input, textarea, select {
       padding: 10px;
     }
+
     .result {
-      margin-top: 20px;
+      margin-top: 10px;
       padding: 10px;
       border: 1px solid #ccc;
       background: #f9f9f9;
       font-size: 18px;
     }
+
     #app-section { display: none; }
+
+    .flex-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .panel {
+      flex: 1 1 400px;
+      min-width: 300px;
+      max-width: 100%;
+    }
+
+    textarea#notes {
+      font-size: 18px;
+      height: 60px;
+      resize: vertical;
+    }
   </style>
 </head>
 <body>
@@ -50,33 +72,39 @@
   <div id="app-section">
     <button id="logout-btn">تسجيل الخروج</button>
 
-    <h3>طلب جديد</h3>
-    <label for="name">اسم مقدم الطلب:</label>
-    <input type="text" id="name" dir="rtl" />
+    <div class="flex-container">
+      <!-- New Application Panel -->
+      <div class="panel">
+        <h3>طلب جديد</h3>
+        <label for="name">اسم مقدم الطلب:</label>
+        <input type="text" id="name" dir="rtl" />
 
-    <label for="notes">ملاحظات (اختياري):</label>
-    <textarea id="notes" rows="4" dir="rtl"></textarea>
+        <button id="submit-btn">إنشاء وتسجيل رقم الطلب</button>
+        <button id="new-entry-btn" style="display:none;">طلب جديد</button>
 
-    <button id="submit-btn">إنشاء وتسجيل رقم الطلب</button>
-    <button id="new-entry-btn" style="display:none;">طلب جديد</button>
+        <div class="result" id="result"></div>
+      </div>
 
-    <div class="result" id="result"></div>
+      <!-- Update Panel -->
+      <div class="panel">
+        <h3>تحديث حالة الطلب</h3>
+        <label for="existing-number">أدخل رقم الطلب:</label>
+        <input type="text" id="existing-number" />
 
-    <hr/>
+        <label for="status-select">اختر الحالة الجديدة:</label>
+        <select id="status-select">
+          <option value="وردت الموافقة">وردت الموافقة</option>
+          <option value="لم ترد الموافقة">لم ترد الموافقة</option>
+          <option value="مطلوب استيفاءات">مطلوب استيفاءات</option>
+        </select>
 
-    <h3>تحديث حالة الطلب</h3>
-    <label for="existing-number">أدخل رقم الطلب:</label>
-    <input type="text" id="existing-number" />
+        <button id="update-btn">تحديث الحالة</button>
+        <div class="result" id="update-result"></div>
 
-    <label for="status-select">اختر الحالة الجديدة:</label>
-    <select id="status-select">
-      <option value="وردت الموافقة">وردت الموافقة</option>
-      <option value="لم ترد الموافقة">لم ترد الموافقة</option>
-      <option value="مطلوب استيفاءات">مطلوب استيفاءات</option>
-    </select>
-
-    <button id="update-btn">تحديث الحالة</button>
-    <div class="result" id="update-result"></div>
+        <label for="notes">ملاحظات (اختياري):</label>
+        <textarea id="notes" rows="3" dir="rtl"></textarea>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -127,25 +155,28 @@
         const number = await generateUniqueNumber();
         const status = "قيد الفحص";
 
-        const { data: insertData, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('birth_cert_requests')
-          .upsert({ number, status, notes: notes || null }, {
-            onConflict: ['number'],
-            returning: 'representation'
-          });
+          .insert({ number, status, notes: notes || null });
 
         if (insertError) {
           alert('حدث خطأ أثناء إرسال البيانات: ' + insertError.message);
           return;
         }
 
-        const latest = insertData && insertData.length > 0 ? insertData[0] : null;
-        if (!latest) {
+        const { data: insertedData, error: fetchError } = await supabase
+          .from('birth_cert_requests')
+          .select('*')
+          .eq('number', number)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (fetchError || !insertedData || insertedData.length === 0) {
           alert("تم الإدخال ولكن تعذر استرجاع البيانات.");
           return;
         }
 
-        showInsertedResult(latest, name);
+        showInsertedResult(insertedData[0], name);
       }
 
       function showInsertedResult(latest, name) {
@@ -165,7 +196,6 @@
 
         document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
 
-        // Download file
         const blob = new Blob([content], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
