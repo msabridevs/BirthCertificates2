@@ -122,14 +122,17 @@
 
   <script>
     const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0'; // Replace with your real key
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('login-btn').onclick = async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) return alert(error.message);
+      if (error) {
+        alert('خطأ في تسجيل الدخول: ' + error.message);
+        return;
+      }
       document.getElementById('auth-section').style.display = 'none';
       document.getElementById('app-section').style.display = 'block';
     };
@@ -156,9 +159,8 @@
     }
 
     document.getElementById('submit-btn').onclick = async () => {
-      console.log("Submit clicked");
       const name = document.getElementById('name').value.trim();
-      const notes = const updateNotes = document.getElementById('notes').value.trim();
+      const notes = document.getElementById('notes').value.trim();
       const transaction = document.getElementById('transaction-type').value;
       if (!name) return alert("يرجى إدخال الاسم.");
 
@@ -168,7 +170,6 @@
 
       const { data } = await supabase.from('civil_status').select('*').eq('number', number).single();
       const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
-      const consulateLink = 'https://www.egyptconsulate-frankfurt.de/';
 
       const resultHTML = `
         نوع المعاملة ${transaction}<br>
@@ -179,10 +180,8 @@
         التاريخ ${dateOnly}<br>
         <br>
         <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABHUlEQVR4nO3QMQ0AAAgDoK1/aA/owFfEUE8tMN4AwDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCPwNqfKOKYqZvtgAAAABJRU5ErkJggg==" class="qr-img" alt="QR Code"><br>
-        <div class="ltr-link">
-          ${consulateLink}
-        </div>
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABHUlEQVR4nO3QMQ0AAAgDoK1/aA/owFfEUE8tMN4AwDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCPwNqfKOKYqZvtgAAAABJRU5ErkJggg==" class="qr-img" alt="QR Code"><br>
+        <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
       `;
 
       document.getElementById('result').innerHTML = resultHTML;
@@ -203,6 +202,7 @@
     document.getElementById('update-btn').onclick = async () => {
       const number = document.getElementById('existing-number').value.trim();
       const status = document.getElementById('status-select').value;
+      const updateNotes = document.getElementById('notes').value.trim();
       if (!number) return alert('أدخل رقم الطلب');
 
       const { data, error: checkError } = await supabase.from('civil_status').select('id').eq('number', number);
