@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلبات الأحوال المدنية</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,7 +13,6 @@
       direction: rtl;
       text-align: right;
     }
-
     label, input, textarea, button, select {
       display: block;
       margin-bottom: 10px;
@@ -20,11 +20,9 @@
       max-width: 100%;
       font-size: 20px;
     }
-
     input, textarea, select {
       padding: 10px;
     }
-
     .result {
       margin-top: 10px;
       padding: 10px;
@@ -32,55 +30,45 @@
       background: #f9f9f9;
       font-size: 18px;
     }
-
     #app-section { display: none; }
-
     .flex-container {
       display: flex;
       gap: 20px;
       flex-wrap: wrap;
     }
-
     .panel {
       flex: 1 1 400px;
       min-width: 300px;
       max-width: 100%;
     }
-
     textarea#notes {
       font-size: 18px;
       height: 60px;
       resize: vertical;
     }
-
-    .qr-container {
+    .qr-img {
       margin-top: 10px;
+      width: 150px;
     }
   </style>
 </head>
 <body>
   <h2>طلبات الأحوال المدنية</h2>
 
-  <!-- Auth Section -->
   <div id="auth-section">
     <label>البريد الإلكتروني:</label>
     <input type="email" id="email" />
-
     <label>كلمة المرور:</label>
     <input type="password" id="password" />
-    
     <button id="login-btn">تسجيل الدخول</button>
   </div>
 
-  <!-- Main App Section -->
   <div id="app-section">
     <button id="logout-btn">تسجيل الخروج</button>
-
     <div class="flex-container">
-      <!-- New Application Panel -->
       <div class="panel">
         <h3>طلب جديد</h3>
-        <label for="transaction-type">نوع المعاملة:</label>
+        <label>نوع المعاملة:</label>
         <select id="transaction-type">
           <option value="شهادة ميلاد">شهادة ميلاد</option>
           <option value="بطاقة الرقم القومى">بطاقة الرقم القومى</option>
@@ -91,204 +79,120 @@
           <option value="شهادة زواج">شهادة زواج</option>
           <option value="شهادة وفاة">شهادة وفاة</option>
         </select>
-
-        <label for="name">اسم مقدم الطلب:</label>
+        <label>اسم مقدم الطلب:</label>
         <input type="text" id="name" dir="rtl" />
-
-        <button id="submit-btn">إنشاء وتسجيل رقم الطلب</button>
+        <button id="submit-btn">تسجيل الطلب</button>
         <button id="new-entry-btn" style="display:none;">طلب جديد</button>
-
         <div class="result" id="result"></div>
       </div>
-
-      <!-- Update Panel -->
       <div class="panel">
-        <h3>تحديث حالة الطلب</h3>
-        <label for="existing-number">أدخل رقم الطلب:</label>
+        <h3>تحديث الحالة</h3>
+        <label>رقم الطلب:</label>
         <input type="text" id="existing-number" />
-
-        <label for="status-select">اختر الحالة الجديدة:</label>
+        <label>اختر الحالة:</label>
         <select id="status-select">
           <option value="وردت الموافقة">وردت الموافقة</option>
           <option value="لم ترد الموافقة">لم ترد الموافقة</option>
           <option value="مطلوب استيفاءات">مطلوب استيفاءات</option>
         </select>
-
-        <button id="update-btn">تحديث الحالة</button>
+        <button id="update-btn">تحديث</button>
         <div class="result" id="update-result"></div>
-
-        <label for="notes">ملاحظات (اختياري):</label>
+        <label>ملاحظات (اختياري):</label>
         <textarea id="notes" rows="3" dir="rtl"></textarea>
       </div>
     </div>
   </div>
 
   <script>
-    window.onload = () => {
-      const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      const loginBtn = document.getElementById('login-btn');
-      const logoutBtn = document.getElementById('logout-btn');
-      const submitBtn = document.getElementById('submit-btn');
-      const newEntryBtn = document.getElementById('new-entry-btn');
-      const updateBtn = document.getElementById('update-btn');
+    document.getElementById('login-btn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return alert(error.message);
+      document.getElementById('auth-section').style.display = 'none';
+      document.getElementById('app-section').style.display = 'block';
+    };
 
-      async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return alert('خطأ في تسجيل الدخول: ' + error.message);
-        alert('تم تسجيل الدخول بنجاح');
-        showApp();
-      }
+    document.getElementById('logout-btn').onclick = async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    };
 
-      async function logout() {
-        await supabase.auth.signOut();
-        showAuth();
-      }
+    async function generateUniqueNumber() {
+      const { data } = await supabase.from('birth_cert_requests').select('number');
+      const existing = new Set(data.map(row => row.number));
+      let number;
+      do {
+        number = String(Math.floor(10000 + Math.random() * 90000));
+      } while (existing.has(number));
+      return number;
+    }
 
-      async function generateUniqueNumber() {
-        const { data, error } = await supabase.from('birth_cert_requests').select('number');
-        if (error) throw error;
-        const existing = new Set(data.map(row => row.number));
-        let number;
-        do {
-          number = String(Math.floor(10000 + Math.random() * 90000));
-        } while (existing.has(number));
-        return number;
-      }
+    document.getElementById('submit-btn').onclick = async () => {
+      const name = document.getElementById('name').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+      const transaction = document.getElementById('transaction-type').value;
+      if (!name) return alert("يرجى إدخال الاسم.");
 
-      async function submitData() {
-        const name = document.getElementById('name').value.trim();
-        const notes = document.getElementById('notes').value.trim();
-        const transaction = document.getElementById('transaction-type').value;
+      const number = await generateUniqueNumber();
+      await supabase.from('birth_cert_requests').insert({ number, status: "قيد الفحص", notes });
+      const { data } = await supabase.from('birth_cert_requests').select('*').eq('number', number).single();
 
-        if (!name) {
-          alert("يرجى إدخال اسم مقدم الطلب.");
-          return;
-        }
+      const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
+      const resultHTML = `
+        نوع المعاملة: ${transaction}<br>
+        اسم مقدم الطلب: ${name}<br>
+        رقم الطلب: ${data.number}<br>
+        الحالة: ${data.status}<br>
+        الملاحظات: ${data.notes || "لا توجد"}<br>
+        التاريخ: ${dateOnly}<br>
+        <br>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة:<br>
+        <a href='https://www.egyptconsulate-frankfurt.de/' target='_blank'>https://www.egyptconsulate-frankfurt.de/</a><br>
+        <img src="frame.png" class="qr-img" alt="QR Code">
+      `;
+      document.getElementById('result').innerHTML = resultHTML;
 
-        const number = await generateUniqueNumber();
-        const status = "قيد الفحص";
+      // Generate PDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont('Helvetica');
+      doc.setFontSize(14);
+      doc.text(`نوع المعاملة: ${transaction}`, 20, 20);
+      doc.text(`اسم مقدم الطلب: ${name}`, 20, 30);
+      doc.text(`رقم الطلب: ${data.number}`, 20, 40);
+      doc.text(`الحالة: ${data.status}`, 20, 50);
+      doc.text(`الملاحظات: ${data.notes || "لا توجد"}`, 20, 60);
+      doc.text(`تاريخ الإدخال: ${dateOnly}`, 20, 70);
+      doc.text("لمتابعة موقف الطلب يرجى زيارة:", 20, 80);
+      doc.text("https://www.egyptconsulate-frankfurt.de/", 20, 90);
 
-        const { error: insertError } = await supabase
-          .from('birth_cert_requests')
-          .insert({ number, status, notes: notes || null });
+      const img = new Image();
+      img.src = "frame.png";
+      img.onload = () => {
+        doc.addImage(img, 'PNG', 20, 100, 50, 50);
+        doc.save(`${name.replace(/[^\w\u0600-\u06FF]+/g, '_')}_${transaction}_طلب.pdf`);
+      };
+    };
 
-        if (insertError) {
-          alert('حدث خطأ أثناء إرسال البيانات: ' + insertError.message);
-          return;
-        }
+    document.getElementById('new-entry-btn').onclick = () => {
+      document.getElementById('name').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('submit-btn').disabled = false;
+      document.getElementById('new-entry-btn').style.display = 'none';
+    };
 
-        const { data: insertedData, error: fetchError } = await supabase
-          .from('birth_cert_requests')
-          .select('*')
-          .eq('number', number)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (fetchError || !insertedData || insertedData.length === 0) {
-          alert("تم الإدخال ولكن تعذر استرجاع البيانات.");
-          return;
-        }
-
-        showInsertedResult(insertedData[0], name, transaction);
-      }
-
-      function showInsertedResult(latest, name, transaction) {
-        document.getElementById('name').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('new-entry-btn').style.display = 'inline-block';
-
-        const dateOnly = new Date(latest.created_at).toLocaleDateString('ar-EG');
-        const consulateLink = "https://www.egyptconsulate-frankfurt.de/";
-        const trackingMsg = `
-لمتابعة موقف الطلب الخاص بكم يرجى التحقق برقم الطلب المكون من خمسة أعداد باللغة الانجليزية على موقع البعثة
-${consulateLink}
-`;
-
-        const content = `
-نوع المعاملة: ${transaction}
-اسم مقدم الطلب: ${name}
-رقم الطلب: ${latest.number}
-الحالة: ${latest.status}
-الملاحظات: ${latest.notes || "لا توجد"}
-تاريخ الإدخال: ${dateOnly}
-${trackingMsg}
-`;
-
-        document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>") +
-          `<div class="qr-container">
-            <strong>رمز الاستجابة السريعة لموقع البعثة:</strong><br/>
-            <img src="https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=${encodeURIComponent(consulateLink)}" alt="QR Code"><br/>
-          </div>`;
-
-        const blob = new Blob([content], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
-        link.download = `${safeName}_${transaction}_طلب.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-
-      async function updateExistingStatus() {
-        const number = document.getElementById('existing-number').value.trim();
-        const newStatus = document.getElementById('status-select').value;
-
-        if (!number) return alert('يرجى إدخال رقم الطلب.');
-
-        const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
-        if (error || !data || data.length === 0) {
-          document.getElementById('update-result').innerHTML = `<span style="color:red">❌ لم يتم العثور على الرقم</span>`;
-          return;
-        }
-
-        const { error: updateError } = await supabase
-          .from('birth_cert_requests')
-          .update({ status: newStatus })
-          .eq('number', number);
-
-        if (updateError) {
-          alert('خطأ أثناء تحديث الحالة: ' + updateError.message);
-          return;
-        }
-
-        document.getElementById('update-result').innerHTML = `<span style="color:green">✅ تم تحديث الحالة إلى: ${newStatus}</span>`;
-      }
-
-      function resetForm() {
-        document.getElementById('name').value = '';
-        document.getElementById('notes').value = '';
-        document.getElementById('result').innerHTML = '';
-        submitBtn.disabled = false;
-        newEntryBtn.style.display = 'none';
-      }
-
-      function showApp() {
-        document.getElementById('auth-section').style.display = 'none';
-        document.getElementById('app-section').style.display = 'block';
-      }
-
-      function showAuth() {
-        document.getElementById('auth-section').style.display = 'block';
-        document.getElementById('app-section').style.display = 'none';
-      }
-
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) showApp();
-        else showAuth();
-      });
-
-      loginBtn.onclick = login;
-      logoutBtn.onclick = logout;
-      submitBtn.onclick = submitData;
-      newEntryBtn.onclick = resetForm;
-      updateBtn.onclick = updateExistingStatus;
+    document.getElementById('update-btn').onclick = async () => {
+      const number = document.getElementById('existing-number').value.trim();
+      const status = document.getElementById('status-select').value;
+      if (!number) return alert('أدخل رقم الطلب');
+      const { error } = await supabase.from('birth_cert_requests').update({ status }).eq('number', number);
+      if (error) return alert('خطأ: ' + error.message);
+      document.getElementById('update-result').innerText = '✅ تم التحديث';
     };
   </script>
 </body>
