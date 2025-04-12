@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلبات الأحوال المدنية</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -83,7 +83,9 @@
         <input type="text" id="name" dir="rtl" />
         <button id="submit-btn">تسجيل الطلب</button>
         <button id="new-entry-btn" style="display:none;">طلب جديد</button>
-        <div class="result" id="result"></div>
+        <div id="result-section">
+          <div class="result" id="result"></div>
+        </div>
       </div>
       <div class="panel">
         <h3>تحديث الحالة</h3>
@@ -143,6 +145,8 @@
       const { data } = await supabase.from('birth_cert_requests').select('*').eq('number', number).single();
 
       const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
+      const consulateLink = 'https://www.egyptconsulate-frankfurt.de/';
+
       const resultHTML = `
         نوع المعاملة: ${transaction}<br>
         اسم مقدم الطلب: ${name}<br>
@@ -151,31 +155,16 @@
         الملاحظات: ${data.notes || "لا توجد"}<br>
         التاريخ: ${dateOnly}<br>
         <br>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة:<br>
-        <a href='https://www.egyptconsulate-frankfurt.de/' target='_blank'>https://www.egyptconsulate-frankfurt.de/</a><br>
+        <a href='${consulateLink}' target='_blank'>${consulateLink}</a><br>
         <img src="frame.png" class="qr-img" alt="QR Code">
       `;
+
       document.getElementById('result').innerHTML = resultHTML;
 
-      // Generate PDF
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFont('Helvetica');
-      doc.setFontSize(14);
-      doc.text(`نوع المعاملة: ${transaction}`, 20, 20);
-      doc.text(`اسم مقدم الطلب: ${name}`, 20, 30);
-      doc.text(`رقم الطلب: ${data.number}`, 20, 40);
-      doc.text(`الحالة: ${data.status}`, 20, 50);
-      doc.text(`الملاحظات: ${data.notes || "لا توجد"}`, 20, 60);
-      doc.text(`تاريخ الإدخال: ${dateOnly}`, 20, 70);
-      doc.text("لمتابعة موقف الطلب يرجى زيارة:", 20, 80);
-      doc.text("https://www.egyptconsulate-frankfurt.de/", 20, 90);
-
-      const img = new Image();
-      img.src = "frame.png";
-      img.onload = () => {
-        doc.addImage(img, 'PNG', 20, 100, 50, 50);
-        doc.save(`${name.replace(/[^\w\u0600-\u06FF]+/g, '_')}_${transaction}_طلب.pdf`);
-      };
+      // Generate PDF using html2pdf
+      const element = document.getElementById("result-section");
+      const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
+      html2pdf().set({ filename: `${safeName}_${transaction}_طلب.pdf` }).from(element).save();
     };
 
     document.getElementById('new-entry-btn').onclick = () => {
