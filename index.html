@@ -1,59 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Birth Certificate Tracker</title>
+  <title>متابعة طلب شهادة الميلاد</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    label, input, button, textarea, select { display: block; margin-bottom: 10px; width: 100%; max-width: 400px; }
-    .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      direction: rtl;
+      text-align: right;
+    }
+    label, input, textarea, button, select {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+      max-width: 500px;
+      font-size: 20px;
+    }
+    input, textarea, select {
+      padding: 10px;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      font-size: 18px;
+    }
     #app-section { display: none; }
   </style>
 </head>
 <body>
-  <h2>Birth Certificate Application Tracker</h2>
+  <h2>متابعة طلب شهادة الميلاد</h2>
 
   <!-- Auth Section -->
   <div id="auth-section">
-    <label>Email:</label>
+    <label>البريد الإلكتروني:</label>
     <input type="email" id="email" />
-    <label>Password:</label>
+
+    <label>كلمة المرور:</label>
     <input type="password" id="password" />
-    <button id="login-btn">Login</button>
+    
+    <button id="login-btn">تسجيل الدخول</button>
   </div>
 
   <!-- Main App Section -->
   <div id="app-section">
-    <button id="logout-btn">Logout</button>
+    <button id="logout-btn">تسجيل الخروج</button>
 
-    <h3>New Application</h3>
-    <label for="name">Applicant Name:</label>
-    <input type="text" id="name" />
+    <h3>طلب جديد</h3>
+    <label for="name">اسم مقدم الطلب:</label>
+    <input type="text" id="name" dir="rtl" />
 
-    <label for="notes">Notes (Optional):</label>
-    <textarea id="notes"></textarea>
+    <label for="notes">ملاحظات (اختياري):</label>
+    <textarea id="notes" rows="4" dir="rtl"></textarea>
 
-    <button id="submit-btn">Generate and Submit Number</button>
-    <button id="new-entry-btn" style="display:none;">New Entry</button>
+    <button id="submit-btn">إنشاء وتسجيل رقم الطلب</button>
+    <button id="new-entry-btn" style="display:none;">طلب جديد</button>
 
     <div class="result" id="result"></div>
 
     <hr/>
 
-    <h3>Update Existing Request</h3>
-    <label for="existing-number">Enter Existing Number:</label>
+    <h3>تحديث حالة الطلب</h3>
+    <label for="existing-number">أدخل رقم الطلب:</label>
     <input type="text" id="existing-number" />
 
-    <label for="status-select">Select New Status:</label>
+    <label for="status-select">اختر الحالة الجديدة:</label>
     <select id="status-select">
-      <option value="approved">approved</option>
-      <option value="rejected">rejected</option>
-      <option value="missing docs">missing docs</option>
+      <option value="وردت الموافقة">وردت الموافقة</option>
+      <option value="لم ترد الموافقة">لم ترد الموافقة</option>
+      <option value="مطلوب استيفاءات">مطلوب استيفاءات</option>
     </select>
 
-    <button id="update-btn">Update Status</button>
+    <button id="update-btn">تحديث الحالة</button>
     <div class="result" id="update-result"></div>
   </div>
 
@@ -73,8 +95,8 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return alert('Login error: ' + error.message);
-        alert('Login successful');
+        if (error) return alert('خطأ في تسجيل الدخول: ' + error.message);
+        alert('تم تسجيل الدخول بنجاح');
         showApp();
       }
 
@@ -98,12 +120,12 @@
         const name = document.getElementById('name').value.trim();
         const notes = document.getElementById('notes').value.trim();
         if (!name) {
-          alert("Please enter the applicant's name.");
+          alert("يرجى إدخال اسم مقدم الطلب.");
           return;
         }
 
         const number = await generateUniqueNumber();
-        const status = "in progress";
+        const status = "قيد الفحص";
 
         const { data: insertData, error: insertError } = await supabase
           .from('birth_cert_requests')
@@ -113,14 +135,13 @@
           });
 
         if (insertError) {
-          alert('Error submitting data: ' + insertError.message);
+          alert('حدث خطأ أثناء إرسال البيانات: ' + insertError.message);
           return;
         }
 
         const latest = insertData && insertData.length > 0 ? insertData[0] : null;
-
         if (!latest) {
-          alert("Error retrieving inserted data.");
+          alert("تم الإدخال ولكن تعذر استرجاع البيانات.");
           return;
         }
 
@@ -134,12 +155,12 @@
         document.getElementById('new-entry-btn').style.display = 'inline-block';
 
         const content = `
-Name: ${name}
-Number: ${latest.number}
-Status: ${latest.status}
-Notes: ${latest.notes || "None"}
-Timestamp: ${latest.created_at}
-ID: ${latest.id || "N/A"}
+الاسم: ${name}
+رقم الطلب: ${latest.number}
+الحالة: ${latest.status}
+الملاحظات: ${latest.notes || "لا توجد"}
+التاريخ: ${latest.created_at}
+المعرف: ${latest.id || "N/A"}
 `;
 
         document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
@@ -148,8 +169,8 @@ ID: ${latest.id || "N/A"}
         const blob = new Blob([content], { type: 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        const safeName = name.replace(/[^a-zA-Z0-9_\-]/g, "_");
-        link.download = `${safeName}_birth_certificate.txt`;
+        const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
+        link.download = `${safeName}_طلب_شهادة_ميلاد.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -159,11 +180,11 @@ ID: ${latest.id || "N/A"}
         const number = document.getElementById('existing-number').value.trim();
         const newStatus = document.getElementById('status-select').value;
 
-        if (!number) return alert('Please enter a number.');
+        if (!number) return alert('يرجى إدخال رقم الطلب.');
 
         const { data, error } = await supabase.from('birth_cert_requests').select('*').eq('number', number);
         if (error || !data || data.length === 0) {
-          document.getElementById('update-result').innerHTML = `<span style="color:red">❌ Number not found</span>`;
+          document.getElementById('update-result').innerHTML = `<span style="color:red">❌ لم يتم العثور على الرقم</span>`;
           return;
         }
 
@@ -173,11 +194,11 @@ ID: ${latest.id || "N/A"}
           .eq('number', number);
 
         if (updateError) {
-          alert('Error updating status: ' + updateError.message);
+          alert('خطأ أثناء تحديث الحالة: ' + updateError.message);
           return;
         }
 
-        document.getElementById('update-result').innerHTML = `<span style="color:green">✅ Status updated to: ${newStatus}</span>`;
+        document.getElementById('update-result').innerHTML = `<span style="color:green">✅ تم تحديث الحالة إلى: ${newStatus}</span>`;
       }
 
       function resetForm() {
