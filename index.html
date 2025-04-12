@@ -95,7 +95,6 @@
         <label>اسم مقدم الطلب:</label>
         <input type="text" id="name" dir="rtl" />
         <button id="submit-btn">تسجيل الطلب</button>
-        <button id="new-entry-btn" style="display:none;">طلب جديد</button>
         <div id="result-section">
           <div class="result" id="result"></div>
         </div>
@@ -147,6 +146,12 @@
       return number;
     }
 
+    function resetForm() {
+      document.getElementById('name').value = '';
+      document.getElementById('notes').value = '';
+      document.getElementById('transaction-type').selectedIndex = 0;
+    }
+
     document.getElementById('submit-btn').onclick = async () => {
       const name = document.getElementById('name').value.trim();
       const notes = document.getElementById('notes').value.trim();
@@ -169,7 +174,7 @@
         التاريخ ${dateOnly}<br>
         <br>
         <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
-        <img src="frame.png" class="qr-img" alt="QR Code"><br>
+        <img src="https://www.egyptconsulate-frankfurt.de/frame.png" class="qr-img" alt="QR Code"><br>
         <div class="ltr-link">
           ${consulateLink}
         </div>
@@ -185,15 +190,9 @@
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(element).save();
-    };
-
-    document.getElementById('new-entry-btn').onclick = () => {
-      document.getElementById('name').value = '';
-      document.getElementById('notes').value = '';
-      document.getElementById('result').innerHTML = '';
-      document.getElementById('submit-btn').disabled = false;
-      document.getElementById('new-entry-btn').style.display = 'none';
+      }).from(element).save().then(() => {
+        resetForm();
+      });
     };
 
     document.getElementById('update-btn').onclick = async () => {
