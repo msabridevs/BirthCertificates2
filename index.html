@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
-      font-family: 'Tahoma', 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       padding: 20px;
       direction: rtl;
       text-align: right;
@@ -32,7 +32,6 @@
       min-height: 400px;
       direction: rtl;
       text-align: right;
-      font-family: 'Tahoma', 'Arial', sans-serif;
     }
     #app-section { display: none; }
     .flex-container {
@@ -61,7 +60,7 @@
       direction: ltr;
       text-align: center;
       font-size: 16px;
-      word-break: break-all;
+      word-break: break-word;
       margin-top: 10px;
     }
   </style>
@@ -162,18 +161,17 @@
       const consulateLink = 'https://www.egyptconsulate-frankfurt.de/';
 
       const resultHTML = `
-        <div style="direction: rtl; text-align: right; font-family: 'Tahoma', 'Arial', sans-serif;">
-          نوع المعاملة: ${transaction}<br>
-          اسم مقدم الطلب: ${name}<br>
-          رقم الطلب: ${data.number}<br>
-          الحالة: ${data.status}<br>
-          الملاحظات: ${data.notes || "لا توجد"}<br>
-          التاريخ: ${dateOnly}<br><br>
-          <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
-          <img src="frame.png" class="qr-img" alt="QR Code"><br>
-          <div class="ltr-link">
-            ${consulateLink}
-          </div>
+        نوع المعاملة ${transaction}<br>
+        اسم مقدم الطلب ${name}<br>
+        رقم الطلب ${data.number}<br>
+        الحالة ${data.status}<br>
+        الملاحظات ${data.notes || "لا توجد"}<br>
+        التاريخ ${dateOnly}<br>
+        <br>
+        <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
+        <img src="frame.png" class="qr-img" alt="QR Code"><br>
+        <div class="ltr-link">
+          ${consulateLink}
         </div>
       `;
 
