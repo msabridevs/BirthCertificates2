@@ -156,6 +156,7 @@
     }
 
     document.getElementById('submit-btn').onclick = async () => {
+      console.log("Submit clicked");
       const name = document.getElementById('name').value.trim();
       const notes = document.getElementById('notes').value.trim();
       const transaction = document.getElementById('transaction-type').value;
