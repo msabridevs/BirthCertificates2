@@ -180,7 +180,7 @@
         التاريخ ${dateOnly}<br>
         <br>
         <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
-        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABHUlEQVR4nO3QMQ0AAAgDoK1/aA/owFfEUE8tMN4AwDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCPwNqfKOKYqZvtgAAAABJRU5ErkJggg==" class="qr-img" alt="QR Code"><br>
+        <img src="https://www.egyptconsulate-frankfurt.de/frame.png" class="qr-img" alt="QR Code"><br>
         <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
       `;
 
@@ -200,6 +200,7 @@
     };
 
     document.getElementById('update-btn').onclick = async () => {
+      resetForm();
       const number = document.getElementById('existing-number').value.trim();
       const status = document.getElementById('status-select').value;
       const updateNotes = document.getElementById('notes').value.trim();
