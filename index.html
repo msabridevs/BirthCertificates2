@@ -6,6 +6,7 @@
   <title>طلبات الأحوال المدنية</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -52,6 +53,7 @@
     .qr-img {
       margin-top: 20px;
       width: 180px;
+      height: 180px;
       display: block;
       margin-left: auto;
       margin-right: auto;
@@ -100,6 +102,7 @@
         <button id="submit-btn">تسجيل الطلب</button>
         <div id="result-section">
           <div class="result" id="result"></div>
+          <canvas id="qr-canvas" class="qr-img"></canvas>
         </div>
       </div>
       <div class="panel">
@@ -156,6 +159,8 @@
       document.getElementById('name').value = '';
       document.getElementById('notes').value = '';
       document.getElementById('transaction-type').selectedIndex = 0;
+      document.getElementById('existing-number').value = '';
+      document.getElementById('status-select').selectedIndex = 0;
     }
 
     document.getElementById('submit-btn').onclick = async () => {
@@ -171,6 +176,12 @@
       const { data } = await supabase.from('civil_status').select('*').eq('number', number).single();
       const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
 
+      const qr = new QRious({
+        element: document.getElementById('qr-canvas'),
+        value: 'https://www.egyptconsulate-frankfurt.de/',
+        size: 180
+      });
+
       const resultHTML = `
         نوع المعاملة ${transaction}<br>
         اسم مقدم الطلب ${name}<br>
@@ -180,8 +191,6 @@
         التاريخ ${dateOnly}<br>
         <br>
         <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
-        <<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABHUlEQVR4nO3QMQ0AAAgDoK1/aA/owFfEUE8tMN4AwDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCMQDCPwNqfKOKYqZvtgAAAABJRU5ErkJggg==" class="qr-img" alt="QR Code">
->
         <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
       `;
 
@@ -201,7 +210,6 @@
     };
 
     document.getElementById('update-btn').onclick = async () => {
-      resetForm();
       const number = document.getElementById('existing-number').value.trim();
       const status = document.getElementById('status-select').value;
       const updateNotes = document.getElementById('notes').value.trim();
@@ -217,6 +225,7 @@
       if (error) return alert('خطأ: ' + error.message);
 
       document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
+      resetForm();
     };
   </script>
 </body>
