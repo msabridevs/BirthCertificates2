@@ -25,10 +25,11 @@
     }
     .result {
       margin-top: 10px;
-      padding: 10px;
+      padding: 20px;
       border: 1px solid #ccc;
       background: #f9f9f9;
       font-size: 18px;
+      min-height: 400px;
     }
     #app-section { display: none; }
     .flex-container {
@@ -47,14 +48,18 @@
       resize: vertical;
     }
     .qr-img {
-      margin-top: 10px;
-      width: 150px;
-      display: block;
-    }
-    .qr-wrapper {
       margin-top: 20px;
-      padding-bottom: 20px;
+      width: 180px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ltr-link {
+      direction: ltr;
       text-align: center;
+      font-size: 16px;
+      word-break: break-all;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -160,21 +165,25 @@
         الحالة: ${data.status}<br>
         الملاحظات: ${data.notes || "لا توجد"}<br>
         التاريخ: ${dateOnly}<br>
-        <div class="qr-wrapper">
-          <img src="frame.png" class="qr-img" alt="QR Code">
-        </div>
-        <div style="direction: ltr; text-align: left; font-size: 14px;">
+        <br>
+        <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong><br>
+        <img src="frame.png" class="qr-img" alt="QR Code"><br>
+        <div class="ltr-link">
           https://www.egyptconsulate-frankfurt.de/
         </div>
-        <br>
-        <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong>
       `;
 
       document.getElementById('result').innerHTML = resultHTML;
 
       const element = document.getElementById("result-section");
       const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
-      html2pdf().set({ filename: `${safeName}_${transaction}_طلب.pdf` }).from(element).save();
+      html2pdf().set({
+        filename: `${safeName}_${transaction}_طلب.pdf`,
+        margin: 10,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(element).save();
     };
 
     document.getElementById('new-entry-btn').onclick = () => {
