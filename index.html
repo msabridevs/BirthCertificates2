@@ -96,7 +96,7 @@
           <option value="شهادة طلاق">شهادة طلاق</option>
           <option value="شهادة زواج">شهادة زواج</option>
           <option value="شهادة وفاة">شهادة وفاة</option>
-	  <option value="إفادة">إفادة</option>
+          <option value="إفادة">إفادة</option>
           <option value="أخرى">أخرى</option>
         </select>
         <label>اسم مقدم الطلب:</label>
@@ -121,6 +121,8 @@
         <div class="result" id="update-result"></div>
       </div>
     </div>
+    <br>
+    <button id="delete-all-btn" style="color: red; font-weight: bold;">🗑 حذف جميع الطلبات</button>
   </div>
 
   <script>
@@ -230,6 +232,33 @@
 
       document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
       resetForm();
+    };
+
+    document.getElementById('delete-all-btn').onclick = async () => {
+      const confirmPhrase = prompt("⚠️ هل أنت متأكد؟ اكتب: 'أوافق على حذف كل الطلبات'");
+      if (confirmPhrase !== 'أوافق على حذف كل الطلبات') {
+        alert("تم الإلغاء. لم يتم حذف أي شيء.");
+        return;
+      }
+
+      const { data: rows, error: fetchError } = await supabase.from('civil_status').select('id');
+      if (fetchError || !rows) {
+        alert('حدث خطأ أثناء محاولة الحذف.');
+        return;
+      }
+
+      if (rows.length === 0) {
+        alert('لا توجد طلبات لحذفها.');
+        return;
+      }
+
+      const ids = rows.map(row => row.id);
+      const { error: deleteError } = await supabase.from('civil_status').delete().in('id', ids);
+      if (deleteError) {
+        alert('حدث خطأ أثناء حذف الطلبات.');
+      } else {
+        alert('✅ تم حذف جميع الطلبات بنجاح.');
+      }
     };
   </script>
 </body>
