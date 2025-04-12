@@ -185,13 +185,14 @@
         document.getElementById('submit-btn').disabled = true;
         document.getElementById('new-entry-btn').style.display = 'inline-block';
 
+        const dateOnly = new Date(latest.created_at).toLocaleDateString('ar-EG');
+
         const content = `
 الاسم: ${name}
 رقم الطلب: ${latest.number}
 الحالة: ${latest.status}
 الملاحظات: ${latest.notes || "لا توجد"}
-التاريخ: ${latest.created_at}
-المعرف: ${latest.id || "N/A"}
+تاريخ الإدخال: ${dateOnly}
 `;
 
         document.getElementById('result').innerHTML = content.replace(/\n/g, "<br/>");
