@@ -49,6 +49,12 @@
     .qr-img {
       margin-top: 10px;
       width: 150px;
+      display: block;
+    }
+    .qr-wrapper {
+      margin-top: 20px;
+      padding-bottom: 20px;
+      text-align: center;
     }
   </style>
 </head>
@@ -154,14 +160,18 @@
         الحالة: ${data.status}<br>
         الملاحظات: ${data.notes || "لا توجد"}<br>
         التاريخ: ${dateOnly}<br>
-        <br>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة:<br>
-        <a href='${consulateLink}' target='_blank'>${consulateLink}</a><br>
-        <img src="frame.png" class="qr-img" alt="QR Code">
+        <div class="qr-wrapper">
+          <img src="frame.png" class="qr-img" alt="QR Code">
+        </div>
+        <div style="direction: ltr; text-align: left; font-size: 14px;">
+          https://www.egyptconsulate-frankfurt.de/
+        </div>
+        <br>
+        <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب على موقع البعثة</strong>
       `;
 
       document.getElementById('result').innerHTML = resultHTML;
 
-      // Generate PDF using html2pdf
       const element = document.getElementById("result-section");
       const safeName = name.replace(/[^a-zA-Z0-9_\-ء-ي]/g, "_");
       html2pdf().set({ filename: `${safeName}_${transaction}_طلب.pdf` }).from(element).save();
