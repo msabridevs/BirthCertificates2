@@ -63,6 +63,9 @@
       word-break: break-word;
       margin-top: 10px;
     }
+    #status-select {
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
@@ -110,9 +113,9 @@
           <option value="مطلوب استيفاءات">مطلوب استيفاءات</option>
         </select>
         <button id="update-btn">تحديث</button>
-        <div class="result" id="update-result"></div>
-        <label>ملاحظات (اختياري):</label>
+        <label style="margin-top: 5px;">ملاحظات (اختياري):</label>
         <textarea id="notes" rows="3" dir="rtl"></textarea>
+        <div class="result" id="update-result"></div>
       </div>
     </div>
   </div>
@@ -137,7 +140,7 @@
     };
 
     async function generateUniqueNumber() {
-      const { data } = await supabase.from('birth_cert_requests').select('number');
+      const { data } = await supabase.from('civil_status').select('number');
       const existing = new Set(data.map(row => row.number));
       let number;
       do {
@@ -199,9 +202,17 @@
       const number = document.getElementById('existing-number').value.trim();
       const status = document.getElementById('status-select').value;
       if (!number) return alert('أدخل رقم الطلب');
+
+      const { data, error: checkError } = await supabase.from('birth_cert_requests').select('id').eq('number', number);
+      if (checkError || !data || data.length === 0) {
+        document.getElementById('update-result').innerHTML = '<span style="color:red">❌ لم يتم العثور على رقم الطلب</span>';
+        return;
+      }
+
       const { error } = await supabase.from('birth_cert_requests').update({ status }).eq('number', number);
       if (error) return alert('خطأ: ' + error.message);
-      document.getElementById('update-result').innerText = '✅ تم التحديث';
+
+      document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
     };
   </script>
 </body>
