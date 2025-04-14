@@ -163,7 +163,8 @@
       return number;
     }
 
-    function copyToEntryBox(number) {
+    function copyToEntryBox(event, number) {
+      event.preventDefault();
       const input = document.getElementById('existing-number');
       input.value = number;
       navigator.clipboard.writeText(number);
@@ -188,7 +189,7 @@
         اسم مقدم الطلب -  ${name}<br>
         رقم الهاتف - ${phone}<br>
         البريد الإلكتروني - ${userEmail}<br>
-        رقم الطلب <a href="#" class="clickable-number" onclick="copyToEntryBox('${data.number}')">${data.number}</a><br>
+        رقم الطلب <a href="#" class="clickable-number" onclick="copyToEntryBox(event, '${data.number}')">${data.number}</a><br>
         الحالة - ${data.status}<br>
         الملاحظات - ${data.notes || "لا توجد"}<br>
         التاريخ - ${dateOnly}<br><br>
