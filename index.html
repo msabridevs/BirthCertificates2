@@ -114,10 +114,17 @@
         <select id="status-select">
           <option value="وردت المعاملة. رجاء إحضار الايصال والحضور للاستلام خلال المواعيد المقررة">وردت المعاملة. رجاء إحضار الايصال ومستند الهوية والإقامة والحضور للاستلام خلال المواعيد الرسمية المعلنة</option>
           <option value="مطلوب استيفاء">مطلوب استيفاء</option>
+          <option value="عدم موافقة">عدم موافقة</option>
+          <option value="قيد الفحص">قيد الفحص</option>
         </select>
         <button id="update-btn">تحديث</button>
         <label style="margin-top: 5px;">ملاحظات (اختياري):</label>
         <textarea id="notes" rows="3" dir="rtl"></textarea>
+
+        <label style="margin-top: 15px;">حذف طلب برقم محدد:</label>
+        <input type="text" id="delete-number" placeholder="أدخل رقم الطلب للحذف" />
+        <button id="delete-one-btn" style="color: red;">🗑 حذف الطلب المحدد</button>
+
         <div class="result" id="update-result"></div>
       </div>
     </div>
@@ -163,6 +170,7 @@
       document.getElementById('transaction-type').selectedIndex = 0;
       document.getElementById('existing-number').value = '';
       document.getElementById('status-select').selectedIndex = 0;
+      document.getElementById('delete-number').value = '';
     }
 
     document.getElementById('submit-btn').onclick = async () => {
@@ -184,8 +192,7 @@
         رقم الطلب  ${data.number}<br>
         الحالة  - ${data.status}<br>
         الملاحظات  - ${data.notes || "لا توجد"}<br>
-        التاريخ  ${dateOnly}<br>
-        <br>
+        التاريخ  ${dateOnly}<br><br>
         <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب المكون من خمسة أعداد باللغة الانجليزية فى القسم المخصص على موقع البعثة</strong><br>
         <canvas id="qr-canvas" class="qr-img"></canvas>
         <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
@@ -232,6 +239,29 @@
 
       document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
       resetForm();
+    };
+
+    document.getElementById('delete-one-btn').onclick = async () => {
+      const number = document.getElementById('delete-number').value.trim();
+      if (!number) return alert("يرجى إدخال رقم الطلب المراد حذفه.");
+
+      const confirmDelete = confirm(`هل أنت متأكد من حذف الطلب رقم ${number}؟`);
+      if (!confirmDelete) return;
+
+      const { data, error: findError } = await supabase.from('civil_status').select('id').eq('number', number);
+      if (findError || !data || data.length === 0) {
+        alert("❌ لم يتم العثور على الطلب.");
+        return;
+      }
+
+      const id = data[0].id;
+      const { error: deleteError } = await supabase.from('civil_status').delete().eq('id', id);
+      if (deleteError) {
+        alert("حدث خطأ أثناء محاولة الحذف.");
+      } else {
+        alert("✅ تم حذف الطلب بنجاح.");
+        document.getElementById('delete-number').value = '';
+      }
     };
 
     document.getElementById('delete-all-btn').onclick = async () => {
