@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلبات المعاملات القنصلية</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf@2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -38,6 +38,7 @@
       padding: 5px 10px;
       display: inline-block;
       direction: ltr;
+      user-select: text;
     }
     #app-section { display: none; }
     .flex-container {
@@ -186,7 +187,7 @@
         اسم مقدم الطلب -  ${name}<br>
         رقم الهاتف - ${phone}<br>
         البريد الإلكتروني - ${userEmail}<br>
-        <div>رقم الطلب:<div class="highlight-number">${data.number}</div></div><br>
+        <div>رقم الطلب:<span class="highlight-number"> ${data.number}</span></div><br>
         الحالة - ${data.status}<br>
         الملاحظات - ${data.notes || "لا توجد"}<br>
         التاريخ - ${dateOnly}<br><br>
@@ -204,14 +205,14 @@
           size: 180
         });
 
-        const element = document.getElementById("result-section");
-        html2pdf().set({
-          filename: `${name.replace(/[^\w\u0600-\u06FF]/g, '_')}_${transaction}_طلب.pdf`,
-          margin: 10,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).from(element).save();
+        const doc = new window.jspdf.jsPDF();
+        doc.setFont("Helvetica");
+        doc.setFontSize(14);
+
+        const text = `\nنوع المعاملة: ${transaction}\nاسم مقدم الطلب: ${name}\nرقم الهاتف: ${phone}\nالبريد الإلكتروني: ${userEmail}\nرقم الطلب: ${data.number}\nالحالة: ${data.status}\nالملاحظات: ${data.notes || "لا توجد"}\nالتاريخ: ${dateOnly}`;
+
+        doc.text(text, 10, 20);
+        doc.save(`${name.replace(/[^\w\u0600-\u06FF]/g, '_')}_${transaction}_طلب.pdf`);
       }, 0);
     };
 
