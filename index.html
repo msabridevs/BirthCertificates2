@@ -55,6 +55,11 @@
       word-break: break-word;
       margin-top: 10px;
     }
+    .clickable-number {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -75,13 +80,13 @@
         <h3>طلب جديد</h3>
         <label>نوع المعاملة:</label>
         <select id="transaction-type">
-          <option value="وثيقة قيد ميلاد">وثيقة قيد ميلاد</option>
+          <option value="شهادة ميلاد">شهادة ميلاد</option>
           <option value="بطاقة الرقم القومى">بطاقة الرقم القومى</option>
           <option value="صحيفة الحالة الجنائية">صحيفة الحالة الجنائية</option>
           <option value="قيد فردى">قيد فردى</option>
           <option value="قيد عائلى">قيد عائلى</option>
-          <option value="وثيقة طلاق">وثيقة طلاق</option>
-          <option value="وثيقة زواج">وثيقة زواج</option>
+          <option value="شهادة طلاق">شهادة طلاق</option>
+          <option value="شهادة زواج">شهادة زواج</option>
           <option value="شهادة وفاة">شهادة وفاة</option>
           <option value="إفادة">إفادة</option>
           <option value="إصدار جواز سفر لأول مرة">إصدار جواز سفر لأول مرة</option>
@@ -128,7 +133,7 @@
 
   <script>
     const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzYmdvenVpZ2pkYXZjeGlheG9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyMjU4NzUsImV4cCI6MjA1OTgwMTg3NX0.OiOH_0ZcTUPu6oMGILsq5oqm1FdCDBvzcHozs-4DNY0';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_KEY';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('login-btn').onclick = async () => {
@@ -177,7 +182,7 @@
         اسم مقدم الطلب -  ${name}<br>
         رقم الهاتف - ${phone}<br>
         البريد الإلكتروني - ${userEmail}<br>
-        رقم الطلب <span style="cursor:pointer;color:blue;text-decoration:underline" onclick="document.getElementById('existing-number').value='${data.number}'">${data.number}</span><br>
+        رقم الطلب <span class="clickable-number" onclick="copyToEntryBox('${data.number}')">${data.number}</span><br>
         الحالة - ${data.status}<br>
         الملاحظات - ${data.notes || "لا توجد"}<br>
         التاريخ - ${dateOnly}<br><br>
@@ -205,6 +210,13 @@
         }).from(element).save();
       }, 0);
     };
+
+    function copyToEntryBox(number) {
+      document.getElementById('existing-number').value = number;
+      navigator.clipboard.writeText(number).then(() => {
+        alert('📋 تم نسخ رقم الطلب ويمكنك الآن لصقه أو استخدامه مباشرة.');
+      });
+    }
 
     document.getElementById('update-btn').onclick = async () => {
       const number = document.getElementById('existing-number').value.trim();
