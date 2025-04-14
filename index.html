@@ -4,72 +4,225 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طلبات المعاملات القنصلية</title>
-  <!-- The rest of the head section remains unchanged -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      direction: rtl;
+      text-align: right;
+    }
+    label, input, textarea, button, select {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+      font-size: 18px;
+    }
+    input, textarea, select {
+      padding: 10px;
+    }
+    .result {
+      margin-top: 10px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      font-size: 18px;
+    }
+    #app-section { display: none; }
+    .flex-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .panel {
+      flex: 1 1 400px;
+      min-width: 300px;
+    }
+    .qr-img {
+      margin-top: 20px;
+      width: 180px;
+      height: 180px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .ltr-link {
+      direction: ltr;
+      text-align: center;
+      font-size: 16px;
+      word-break: break-word;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <h2>طلبات المعاملات القنصلية</h2>
 
-  <!-- Existing auth section -->
+  <div id="auth-section">
+    <label>البريد الإلكتروني:</label>
+    <input type="email" id="email" />
+    <label>كلمة المرور:</label>
+    <input type="password" id="password" />
+    <button id="login-btn">تسجيل الدخول</button>
+  </div>
 
   <div id="app-section">
-    <!-- Updated dropdown for transaction types -->
-    <select id="transaction-type">
-      <option value="شهادة ميلاد">شهادة ميلاد</option>
-      <option value="بطاقة الرقم القومى">بطاقة الرقم القومى</option>
-      <option value="صحيفة الحالة الجنائية">صحيفة الحالة الجنائية</option>
-      <option value="قيد فردى">قيد فردى</option>
-      <option value="قيد عائلى">قيد عائلى</option>
-      <option value="شهادة طلاق">شهادة طلاق</option>
-      <option value="شهادة زواج">شهادة زواج</option>
-      <option value="شهادة وفاة">شهادة وفاة</option>
-      <option value="إفادة">إفادة</option>
-      <option value="إصدار جواز سفر لأول مرة">إصدار جواز سفر لأول مرة</option>
-      <option value="تجديد جواز سفر">تجديد جواز سفر</option>
-      <option value="بحث الجنسية">بحث الجنسية</option>
-      <option value="إسترداد الجنسية">إسترداد الجنسية</option>
-      <option value="الإذن بالتجنس مع الاحتفاظ بالجنسية المصرية">الإذن بالتجنس مع الاحتفاظ بالجنسية المصرية</option>
-      <option value="الإذن بالتجنس مع عدم الاحتفاظ بالجنسية المصرية">الإذن بالتجنس مع عدم الاحتفاظ بالجنسية المصرية</option>
-    </select>
+    <button id="logout-btn">تسجيل الخروج</button>
+    <div class="flex-container">
+      <div class="panel">
+        <h3>طلب جديد</h3>
+        <label>نوع المعاملة:</label>
+        <select id="transaction-type">
+          <option value="شهادة ميلاد">شهادة ميلاد</option>
+          <option value="بطاقة الرقم القومى">بطاقة الرقم القومى</option>
+          <option value="صحيفة الحالة الجنائية">صحيفة الحالة الجنائية</option>
+          <option value="قيد فردى">قيد فردى</option>
+          <option value="قيد عائلى">قيد عائلى</option>
+          <option value="شهادة طلاق">شهادة طلاق</option>
+          <option value="شهادة زواج">شهادة زواج</option>
+          <option value="شهادة وفاة">شهادة وفاة</option>
+          <option value="إفادة">إفادة</option>
+          <option value="إصدار جواز سفر لأول مرة">إصدار جواز سفر لأول مرة</option>
+          <option value="تجديد جواز سفر">تجديد جواز سفر</option>
+          <option value="بحث الجنسية">بحث الجنسية</option>
+          <option value="إسترداد الجنسية">إسترداد الجنسية</option>
+          <option value="الإذن بالتجنس مع الاحتفاظ بالجنسية المصرية">الإذن بالتجنس مع الاحتفاظ بالجنسية المصرية</option>
+          <option value="الإذن بالتجنس مع عدم الاحتفاظ بالجنسية المصرية">الإذن بالتجنس مع عدم الاحتفاظ بالجنسية المصرية</option>
+        </select>
 
-    <!-- New phone and email fields, not stored -->
-    <label>رقم الهاتف:</label>
-    <input type="tel" id="phone" />
-    <label>البريد الإلكتروني:</label>
-    <input type="email" id="user-email" />
+        <label>اسم مقدم الطلب:</label>
+        <input type="text" id="name" />
+        <label>رقم الهاتف:</label>
+        <input type="tel" id="phone" />
+        <label>البريد الإلكتروني:</label>
+        <input type="email" id="user-email" />
 
-    <!-- Updated status dropdown -->
-    <select id="status-select">
-      <option value="وردت المعاملة. رجاء إحضار الايصال ومستند الهوية والحضور للاستلام خلال المواعيد الرسمية المعلنة.">
-        وردت المعاملة. رجاء إحضار الايصال ومستند الهوية والحضور للاستلام خلال المواعيد الرسمية المعلنة.
-      </option>
-      <option value="مطلوب استيفاء">مطلوب استيفاء</option>
-      <option value="جارى مراجعة الطلب">جارى مراجعة الطلب</option>
-      <option value="تم الإرسال بالبريد">تم الإرسال بالبريد</option>
-    </select>
+        <button id="submit-btn">تسجيل الطلب</button>
+        <div id="result-section">
+          <div class="result" id="result"></div>
+        </div>
+      </div>
 
-    <!-- Removed deletion controls -->
-    <!-- Removed delete-one-btn and delete-all-btn sections -->
+      <div class="panel">
+        <h3>تحديث الحالة</h3>
+        <label>رقم الطلب:</label>
+        <input type="text" id="existing-number" />
+        <label>اختر الحالة:</label>
+        <select id="status-select">
+          <option value="وردت المعاملة. رجاء إحضار الايصال ومستند الهوية والحضور للاستلام خلال المواعيد الرسمية المعلنة.">
+            وردت المعاملة. رجاء إحضار الايصال ومستند الهوية والحضور للاستلام خلال المواعيد الرسمية المعلنة.
+          </option>
+          <option value="مطلوب استيفاء">مطلوب استيفاء</option>
+          <option value="جارى مراجعة الطلب">جارى مراجعة الطلب</option>
+          <option value="تم الإرسال بالبريد">تم الإرسال بالبريد</option>
+        </select>
+        <button id="update-btn">تحديث</button>
+        <label>ملاحظات (اختياري):</label>
+        <textarea id="notes" rows="3"></textarea>
+        <div class="result" id="update-result"></div>
+      </div>
+    </div>
+  </div>
 
-    <!-- In the PDF generation logic inside the submit button click handler, include name, phone, email -->
-    const phone = document.getElementById('phone').value.trim();
-    const userEmail = document.getElementById('user-email').value.trim();
-    
-    const resultHTML = `
-      نوع المعاملة -  ${transaction}<br>
-      اسم مقدم الطلب -  ${name}<br>
-      رقم الهاتف -  ${phone}<br>
-      البريد الإلكتروني -  ${userEmail}<br>
-      رقم الطلب <span style="cursor:pointer; color:blue; text-decoration:underline" onclick="document.getElementById('existing-number').value='${data.number}'">${data.number}</span><br>
-      الحالة  - ${data.status}<br>
-      الملاحظات  - ${data.notes || "لا توجد"}<br>
-      التاريخ  ${dateOnly}<br><br>
-      <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب المكون من خمسة أعداد باللغة الانجليزية فى القسم المخصص على موقع البعثة</strong><br>
-      <canvas id="qr-canvas" class="qr-img"></canvas>
-      <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
-    `;
+  <script>
+    const SUPABASE_URL = 'https://esbgozuigjdavcxiaxon.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_KEY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Also update the database insertion status string to "جارى مراجعة الطلب"
-    const { error: insertError } = await supabase.from('civil_status').insert({ number, status: "جارى مراجعة الطلب", notes });
+    document.getElementById('login-btn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('app-section').style.display = 'block';
+      } else {
+        alert('خطأ في تسجيل الدخول: ' + error.message);
+      }
+    };
+
+    document.getElementById('logout-btn').onclick = async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    };
+
+    async function generateUniqueNumber() {
+      const { data } = await supabase.from('civil_status').select('number');
+      const existing = new Set(data.map(row => row.number));
+      let number;
+      do {
+        number = String(Math.floor(10000 + Math.random() * 90000));
+      } while (existing.has(number));
+      return number;
+    }
+
+    document.getElementById('submit-btn').onclick = async () => {
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const userEmail = document.getElementById('user-email').value.trim();
+      const transaction = document.getElementById('transaction-type').value;
+      if (!name) return alert("يرجى إدخال الاسم.");
+
+      const number = await generateUniqueNumber();
+      const { error: insertError } = await supabase.from('civil_status').insert({ number, status: "جارى مراجعة الطلب", notes: '' });
+      if (insertError) return alert("خطأ أثناء الإدخال: " + insertError.message);
+
+      const { data } = await supabase.from('civil_status').select('*').eq('number', number).single();
+      const dateOnly = new Date(data.created_at).toLocaleDateString('ar-EG');
+
+      const resultHTML = `
+        نوع المعاملة -  ${transaction}<br>
+        اسم مقدم الطلب -  ${name}<br>
+        رقم الهاتف - ${phone}<br>
+        البريد الإلكتروني - ${userEmail}<br>
+        رقم الطلب <span style="cursor:pointer;color:blue;text-decoration:underline" onclick="document.getElementById('existing-number').value='${data.number}'">${data.number}</span><br>
+        الحالة - ${data.status}<br>
+        الملاحظات - ${data.notes || "لا توجد"}<br>
+        التاريخ - ${dateOnly}<br><br>
+        <strong>لمتابعة موقف الطلب يرجى التحقق برقم الطلب المكون من خمسة أعداد باللغة الانجليزية فى القسم المخصص على موقع البعثة</strong><br>
+        <canvas id="qr-canvas" class="qr-img"></canvas>
+        <div class="ltr-link">https://www.egyptconsulate-frankfurt.de/</div>
+      `;
+
+      document.getElementById('result').innerHTML = resultHTML;
+
+      setTimeout(() => {
+        new QRious({
+          element: document.getElementById('qr-canvas'),
+          value: 'https://www.egyptconsulate-frankfurt.de/',
+          size: 180
+        });
+
+        const element = document.getElementById("result-section");
+        html2pdf().set({
+          filename: `${name.replace(/[^\w\u0600-\u06FF]/g, '_')}_${transaction}_طلب.pdf`,
+          margin: 10,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(element).save();
+      }, 0);
+    };
+
+    document.getElementById('update-btn').onclick = async () => {
+      const number = document.getElementById('existing-number').value.trim();
+      const status = document.getElementById('status-select').value;
+      const updateNotes = document.getElementById('notes').value.trim();
+      if (!number) return alert('أدخل رقم الطلب');
+
+      const { data, error: checkError } = await supabase.from('civil_status').select('id').eq('number', number);
+      if (checkError || !data || data.length === 0) {
+        document.getElementById('update-result').innerHTML = '<span style="color:red">❌ لم يتم العثور على رقم الطلب</span>';
+        return;
+      }
+
+      const { error } = await supabase.from('civil_status').update({ status, notes: updateNotes }).eq('number', number);
+      if (error) return alert('خطأ: ' + error.message);
+
+      document.getElementById('update-result').innerText = `✅ تم تحديث الحالة إلى: ${status}`;
+    };
   </script>
 </body>
 </html>
