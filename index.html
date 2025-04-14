@@ -30,6 +30,15 @@
       background: #f9f9f9;
       font-size: 18px;
     }
+    .highlight-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: darkblue;
+      background-color: #e0eaff;
+      padding: 5px 10px;
+      display: inline-block;
+      direction: ltr;
+    }
     #app-section { display: none; }
     .flex-container {
       display: flex;
@@ -54,11 +63,6 @@
       font-size: 16px;
       word-break: break-word;
       margin-top: 10px;
-    }
-    .clickable-number {
-      cursor: pointer;
-      color: blue;
-      text-decoration: underline;
     }
   </style>
 </head>
@@ -163,13 +167,6 @@
       return number;
     }
 
-    function copyToEntryBox(event, number) {
-      event.preventDefault();
-      const input = document.getElementById('existing-number');
-      input.value = number;
-      navigator.clipboard.writeText(number);
-    }
-
     document.getElementById('submit-btn').onclick = async () => {
       const name = document.getElementById('name').value.trim();
       const phone = document.getElementById('phone').value.trim();
@@ -189,7 +186,7 @@
         اسم مقدم الطلب -  ${name}<br>
         رقم الهاتف - ${phone}<br>
         البريد الإلكتروني - ${userEmail}<br>
-        رقم الطلب <a href="#" class="clickable-number" onclick="copyToEntryBox(event, '${data.number}')">${data.number}</a><br>
+        <div>رقم الطلب:<div class="highlight-number">${data.number}</div></div><br>
         الحالة - ${data.status}<br>
         الملاحظات - ${data.notes || "لا توجد"}<br>
         التاريخ - ${dateOnly}<br><br>
