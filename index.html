@@ -200,7 +200,7 @@
       document.getElementById('result').innerHTML = resultHTML;
 
       setTimeout(() => {
-        const qr = new QRious({
+        new QRious({
           element: document.getElementById('qr-canvas'),
           value: 'https://www.egyptconsulate-frankfurt.de/',
           size: 180
@@ -210,13 +210,18 @@
 
         html2pdf().set({
           filename: `${name.replace(/[^\w\u0600-\u06FF]/g, '_')}_${transaction}_طلب.pdf`,
-          margin: [20, 10, 10, 10],
+          margin: [30, 10, 10, 10],
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).from(element).toPdf().get('pdf').then(pdf => {
-          pdf.setFontSize(18);
-          pdf.text(`رقم الطلب: ${number}`, 10, 10, { align: 'left' });
+          pdf.setTextColor(0, 0, 139); // darkblue
+          pdf.setFontSize(24);
+          pdf.setDrawColor(224, 234, 255); // light blue
+          pdf.setFillColor(224, 234, 255);
+          const width = pdf.getTextWidth(number) + 10;
+          pdf.rect(105 - width / 2, 10, width, 12, 'F');
+          pdf.text(number, 105, 18, { align: 'center' });
         }).save();
       }, 500);
     };
